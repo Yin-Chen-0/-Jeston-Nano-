@@ -98,19 +98,8 @@ class Detector(QObject):
         fourcc = cv.VideoWriter_fourcc(*'XVID')#cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
         out = cv.VideoWriter('output.avi',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
         while cap.isOpened():
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
+
             # print("I m here")
-=======
-            print("I m here")
->>>>>>> 809b46edc25c20f4b2485a8d628f0a8db3a5f5b6
-=======
-            print("I m here")
->>>>>>> origin/master
-=======
-            print("I m here")
->>>>>>> origin/master
             ret, frame = cap.read()
             # 如果正确读取帧，ret为True
             if not ret:
