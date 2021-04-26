@@ -3,9 +3,11 @@ import numpy as np
 import cv2 as cv
 import os
 import time
+import PIL
+from PyQt5.QtCore import *
 
-
-class Detector(object):
+class Detector(QObject):
+    sendImg = pyqtSignal(list)
     def __init__(self):
         super(Detector, self).__init__()
         self.yolo_dir = './darknet'  # YOLO文件路径
@@ -17,7 +19,7 @@ class Detector(object):
         print("[INFO] loading YOLO from disk...")  ## 可以打印下信息
         self.net = cv.dnn.readNetFromDarknet(self.configPath, self.weightsPath)  ## 利用下载的文件
 
-    def dectet(self, img):
+    def dectetImg(self, img):
         blobImg = cv.dnn.blobFromImage(img, 1.0 / 255.0, (416, 416), None, True,
                                        False)  ## net需要的输入是blob格式的，用blobFromImage这个函数来转格式
         self.net.setInput(blobImg)  ## 调用setInput函数将图片送入输入层
@@ -76,3 +78,28 @@ class Detector(object):
                            2)  # cv.FONT_HERSHEY_SIMPLEX字体风格、0.5字体大小、粗细2px
 
         return img, outString[:-1]
+
+    def dectetVideo(self, filename):
+        cap = cv.VideoCapture(filename)
+        frame_height = cap.get(cv.CAP_PROP_FRAME_HEIGHT)
+        frame_width = cap.get(cv.CAP_PROP_FRAME_WIDTH)
+        fps = cap.get(cv.CAP_PROP_FPS)
+        size = (int(frame_width),int(frame_height))
+        fourcc = cv.VideoWriter_fourcc(*'XVID')#cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
+        out = cv.VideoWriter('output.avi',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
+        while cap.isOpened():
+            print("I m here")
+            ret, frame = cap.read()
+            # 如果正确读取帧，ret为True
+            if not ret:
+                print("Can't receive frame (stream end?). Exiting ...")
+                break
+
+            frame , vout= self.dectetImg(frame)
+            out.write(frame)
+            img = PIL.Image.fromarray(frame)
+            pixmap = img.toqpixmap()
+            self.sendImg.emit([pixmap, vout])
+            
+        cap.release()
+        cv.destroyAllWindows()
