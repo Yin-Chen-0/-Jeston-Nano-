@@ -18,8 +18,11 @@ from detector import Detector
 import cv2 as cv
 import time
 
+
 class Ui_mainWindow(QWidget):
     startWork = pyqtSignal()
+    dectSignal = pyqtSignal(str)
+
     def __init__(self):
         super(Ui_mainWindow, self).__init__()
 
@@ -28,10 +31,12 @@ class Ui_mainWindow(QWidget):
         self.camera.moveToThread(self.cameraThread)
 
         self.detector = Detector()
+        self.detectorThread = QThread()
+        self.detector.moveToThread(self.detectorThread)
 
     def setupUi(self, mainWindow):
         mainWindow.setObjectName("mainWindow")
-        mainWindow.setFixedSize(1328,827)
+        mainWindow.setFixedSize(1328, 827)
         # mainWindow.resize(1328, 827)
         self.centralwidget = QtWidgets.QWidget(mainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -123,13 +128,15 @@ class Ui_mainWindow(QWidget):
         self.label_Display.setPixmap(img)
         self.initSignasAndSolts()
 
-
     def initSignasAndSolts(self):
         self.pushButton_Start.clicked.connect(self.start)
         self.pushButton_Stop.clicked.connect(self.stop)
         self.startWork.connect(self.camera.doMyWork)
         self.camera.sendImg.connect(self.display)
         self.pushButton_Test.clicked.connect(self.test)
+        self.detector.sendImg.connect(self.display)
+
+        self.dectSignal.connect(self.detector.dectetVideo)
 
     def checkStates(self):
         self.plainTextState.setPlainText("")
@@ -189,25 +196,59 @@ class Ui_mainWindow(QWidget):
         self.plainTextEdit.appendPlainText(img[1])
 
     def test(self):
-        self.plainTextState.setPlainText("正在进行测试...")
+        
+        if self.detectorThread.isRunning():
+            self.pushButton_Test.setText("测试模式")
+            self.detectorThread.quit()
+            self.detectorThread.wait()
+            self.pushButton_Start.clicked.disconnect(self.dectetVideo)
+            self.pushButton_Stop.clicked.disconnect(self.dectetImg)
+            self.pushButton_Start.setText("开始监测")
+            self.pushButton_Stop.setText("停止监测")
+            self.pushButton_Start.clicked.connect(self.start)
+            self.pushButton_Stop.clicked.connect(self.stop)
+            self.plainTextState.setPlainText("测试模式已关闭...")
+        else:
+            self.pushButton_Test.setText("关闭测试模式")
+            self.detectorThread.start()
+            self.pushButton_Start.setText("检测视频")
+            self.pushButton_Stop.setText("检测图片")
+
+            self.pushButton_Stop.clicked.disconnect(self.stop)
+            self.pushButton_Start.clicked.disconnect(self.start)
+
+            self.pushButton_Start.clicked.connect(self.dectetVideo)
+            self.pushButton_Stop.clicked.connect(self.dectetImg)
+            self.plainTextState.setPlainText("测试模式已开启...")
+
+    def dectetVideo(self):
+        self.plainTextState.appendPlainText("正在进行视频监测...")
         print("选择文件夹")
         # 实例化QFileDialog
         dig = QFileDialog()
-        filenames = dig.getOpenFileName(self, '选择测试图片', '/home/chenyin/Pictures/', 'Image files (*.jpg *.gif *.png *.jpeg)')
-        if filenames[0] =='':
+        filenames = dig.getOpenFileName(self, '选择测试图片', './', 'Image files (*.jpg *.gif *.png *.jpeg *.mp4)')
+        if filenames[0] == '':
             return
-        
+        print(filenames[0])
+        self.dectSignal.emit(filenames[0])
+
+    def dectetImg(self):
+        self.plainTextState.appendPlainText("正在进行图片监测...")
+        print("选择文件夹")
+        # 实例化QFileDialog
+        dig = QFileDialog()
+        filenames = dig.getOpenFileName(self, '选择测试图片', './', 'Image files (*.jpg *.gif *.png *.jpeg *.mp4)')
+        if filenames[0] == '':
+            return
 
         img = cv.imread(filenames[0])
         size = self.label_Display.size()
-        img = cv.resize(img,(size.width(),size.height()))
-        # img = Image.open(filenames[0])
-        img , out= self.detector.dectet(img)
+        img = cv.resize(img, (size.width(), size.height()))
+
+        img, out = self.detector.dectetImg(img)
         img = Image.fromarray(img)
         img = img.toqpixmap()
         self.label_Display.setPixmap(img)
         self.plainTextEdit.appendPlainText(out)
-        self.plainTextState.setPlainText("测试结束...")
-
-
-
+        self.plainTextState.setPlainText("图片测试结束...")
+        return

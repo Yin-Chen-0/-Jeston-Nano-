@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 class Camera(QObject):
     sendImg = pyqtSignal(list)
-    sendImg2 = pyqtSignal(list)
+   
     # sendOutImg = pyqtSignal(list)
 
     def __init__(self):
@@ -29,7 +29,7 @@ class Camera(QObject):
         flag, self.image = self.cap.read()
         # show = cv2.resize(self.image)
         show = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
-        show, outstr= self.detector.dectet(show)
+        show, outstr= self.detector.dectetImg(show)
 
         # img = np.array(show)
         # if self.i == 30:
