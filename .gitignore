@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 model/darknet/my_yolov3_final.weights
 违章人员/
 VggVehicle.h5
 output.avi
 *.mp4
 
+=======
+darknet/
+违章人员/
+model/
+>>>>>>> origin/master
