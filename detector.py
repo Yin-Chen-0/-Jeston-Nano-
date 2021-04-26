@@ -6,11 +6,15 @@ import time
 import PIL
 from PyQt5.QtCore import *
 
+from tensorflow.keras import models
+import numpy as np
+from tensorflow.keras.preprocessing import image
+
 class Detector(QObject):
     sendImg = pyqtSignal(list)
     def __init__(self):
         super(Detector, self).__init__()
-        self.yolo_dir = './darknet'  # YOLO文件路径
+        self.yolo_dir = './model/darknet'  # YOLO文件路径
         self.weightsPath = os.path.join(self.yolo_dir, 'my_yolov3_final.weights')  # 权重文件
         self.configPath = os.path.join(self.yolo_dir, 'my_yolov3.cfg')  # 配置文件
         self.labelsPath = os.path.join(self.yolo_dir, 'myData.names')  # label名称
@@ -19,6 +23,12 @@ class Detector(QObject):
         print("[INFO] loading YOLO from disk...")  ## 可以打印下信息
         self.net = cv.dnn.readNetFromDarknet(self.configPath, self.weightsPath)  ## 利用下载的文件
 
+        print("[INFO] loading Vgg from disk...")  ## 可以打印下信息
+        self.model = models.load_model("./model/Vgg/VggVehicle.h5")
+        self.labels = ['SUV', 'bus', 'family sedan', 'fire engine', 'heavy truck', 'jeep', 'minibus', 'racing car',
+                       'taxi',
+                       'truck']
+        
     def dectetImg(self, img):
         blobImg = cv.dnn.blobFromImage(img, 1.0 / 255.0, (416, 416), None, True,
                                        False)  ## net需要的输入是blob格式的，用blobFromImage这个函数来转格式
@@ -103,3 +113,14 @@ class Detector(QObject):
             
         cap.release()
         cv.destroyAllWindows()
+
+    def dectVehicle(self,img):
+        print("[INFO] detecting Vehicle ...")  ## 可以打印下信息
+        x = cv.resize(img,(150,150))
+        x = np.expand_dims(x, axis=0)
+        x = x / 255.0
+        out = self.labels[self.model.predict_classes(x).astype("int32")[0]]
+        # print(self.model.predict_classes(x).astype("int32")[0], out)
+
+        return img, out
+

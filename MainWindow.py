@@ -51,6 +51,12 @@ class Ui_mainWindow(QWidget):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
+
+
+        self.checkBox_Logs = QtWidgets.QCheckBox(self.widget)
+        self.checkBox_Logs.setObjectName("checkBox_Logs")
+        self.verticalLayout.addWidget(self.checkBox_Logs)
+
         self.checkBox_Vegicle = QtWidgets.QCheckBox(self.widget)
         self.checkBox_Vegicle.setObjectName("checkBox_Vegicle")
         self.verticalLayout.addWidget(self.checkBox_Vegicle)
@@ -72,6 +78,11 @@ class Ui_mainWindow(QWidget):
         self.pushButton_Stop = QtWidgets.QPushButton(self.widget)
         self.pushButton_Stop.setObjectName("pushButton_Stop")
         self.verticalLayout_2.addWidget(self.pushButton_Stop)
+
+        self.pushButton_Vehicle = QtWidgets.QPushButton(self.widget)
+        self.pushButton_Vehicle.setObjectName("pushButton_Vehicle")
+        self.verticalLayout_2.addWidget(self.pushButton_Vehicle)
+
         self.pushButton_Test = QtWidgets.QPushButton(self.widget)
         self.pushButton_Test.setObjectName("pushButton_Test")
         self.verticalLayout_2.addWidget(self.pushButton_Test)
@@ -106,6 +117,7 @@ class Ui_mainWindow(QWidget):
     def retranslateUi(self, mainWindow):
         _translate = QtCore.QCoreApplication.translate
         mainWindow.setWindowTitle(_translate("mainWindow", "基于Jeston Nano的嵌入式工地监测系统"))
+        self.checkBox_Logs.setText("保存日志")
         self.checkBox_Vegicle.setText(_translate("mainWindow", "车辆监测"))
         self.checkBox_Clothes.setText(_translate("mainWindow", "反光衣监测"))
         self.checkBox_Hat.setText(_translate("mainWindow", "安全帽监测"))
@@ -113,6 +125,7 @@ class Ui_mainWindow(QWidget):
         self.pushButton_Start.setText(_translate("mainWindow", "开始监测"))
         self.pushButton_Stop.setText(_translate("mainWindow", "停止监测"))
         self.pushButton_Test.setText(_translate("mainWindow", "测试模式"))
+        self.pushButton_Vehicle.setText("车辆检测")
         self.pushButton_Exit.setText("退出")
         self.label_Display.setText(_translate("mainWindow", "监控区域"))
         self.label_Display.setStyleSheet("QLabel{border:2px solid rgb(126,139,146);}")
@@ -137,6 +150,8 @@ class Ui_mainWindow(QWidget):
         self.detector.sendImg.connect(self.display)
 
         self.dectSignal.connect(self.detector.dectetVideo)
+
+        self.pushButton_Vehicle.clicked.connect(self.dectVehicle)
 
     def checkStates(self):
         self.plainTextState.setPlainText("")
@@ -190,7 +205,10 @@ class Ui_mainWindow(QWidget):
 
         if person > 0 and hat < 0 or reflective_clothes < 0:
             self.plainTextEdit.appendPlainText("[{}有工人没有按规定着装:]".format(daytime))
-            img[0].save("./违章人员/" + daytime + ".jpg")
+            if self.checkBox_Logs.isChecked:
+                img[0].save("./违章人员/" + daytime + ".jpg")
+            else:
+                pass
         else:
             self.plainTextEdit.appendPlainText("[{}:]".format(daytime))
         self.plainTextEdit.appendPlainText(img[1])
@@ -252,3 +270,24 @@ class Ui_mainWindow(QWidget):
         self.plainTextEdit.appendPlainText(out)
         self.plainTextState.setPlainText("图片测试结束...")
         return
+    
+    def dectVehicle(self):
+        self.plainTextState.appendPlainText("正在进行车辆监测...")
+        print("选择文件夹")
+        # 实例化QFileDialog
+        dig = QFileDialog()
+        filenames = dig.getOpenFileName(self, '选择测试图片', './', 'Image files (*.jpg *.gif *.png *.jpeg *.mp4)')
+        if filenames[0] == '':
+            return
+        img = cv.imread(filenames[0])
+        size = self.label_Display.size()
+        img = cv.resize(img, (size.width(), size.height()))
+
+        img, out = self.detector.dectVehicle(img)
+        img = Image.fromarray(img)
+        img = img.toqpixmap()
+        self.label_Display.setPixmap(img)
+        
+        self.plainTextEdit.appendPlainText("The car is "+out)
+        self.plainTextState.setPlainText("车辆检测结束...")
+
