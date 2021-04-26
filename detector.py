@@ -23,8 +23,6 @@ class Detector(QObject):
         print("[INFO] loading YOLO from disk...")  ## 可以打印下信息
         self.net = cv.dnn.readNetFromDarknet(self.configPath, self.weightsPath)  ## 利用下载的文件
 
-        print("[INFO] loading Vgg from disk...")  ## 可以打印下信息
-        self.model = models.load_model("./model/Vgg/VggVehicle.h5")
         self.labels = ['SUV', 'bus', 'family sedan', 'fire engine', 'heavy truck', 'jeep', 'minibus', 'racing car',
                        'taxi',
                        'truck']
@@ -115,6 +113,8 @@ class Detector(QObject):
         cv.destroyAllWindows()
 
     def dectVehicle(self,img):
+        print("[INFO] loading Vgg from disk...")  ## 可以打印下信息
+        self.model = models.load_model("./model/Vgg/VggVehicle.h5")
         print("[INFO] detecting Vehicle ...")  ## 可以打印下信息
         x = cv.resize(img,(150,150))
         x = np.expand_dims(x, axis=0)
