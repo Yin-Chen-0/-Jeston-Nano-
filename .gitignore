@@ -3,4 +3,5 @@ model/darknet/my_yolov3_final.weights
 VggVehicle.h5
 output.avi
 *.mp4
+*.avi
 *.pyc
