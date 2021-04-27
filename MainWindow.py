@@ -136,7 +136,10 @@ class Ui_mainWindow(QWidget):
         self.checkBox_Clothes.setChecked(True)
 
         self.pushButton_Exit.clicked.connect(mainWindow.close)
-        img = Image.open("background.jpg")
+        img = Image.open("background.png")
+        size = self.label_Display.size()
+        size = (size.width(), size.height())
+        img = img.resize(size)
         img = img.toqpixmap()
         self.label_Display.setPixmap(img)
         self.initSignasAndSolts()
@@ -196,16 +199,15 @@ class Ui_mainWindow(QWidget):
 
     def display(self, img):
         self.label_Display.setPixmap(img[0])
-        daytime = time.strftime("%Y-%m-%d %X", time.localtime())
+        daytime = time.strftime("%Y-%m-%d-%H-%M-%s", time.localtime())
 
         outstr = img[1]
         person = outstr.find("person")
         hat = outstr.find("hat")
         reflective_clothes = outstr.find("reflective_clothes")
-
         if person > 0 and hat < 0 or reflective_clothes < 0:
             self.plainTextEdit.appendPlainText("[{}有工人没有按规定着装:]".format(daytime))
-            if self.checkBox_Logs.isChecked:
+            if self.checkBox_Logs.isChecked():
                 img[0].save("./违章人员/" + daytime + ".jpg")
             else:
                 pass
@@ -217,6 +219,7 @@ class Ui_mainWindow(QWidget):
         
         if self.detectorThread.isRunning():
             self.pushButton_Test.setText("测试模式")
+            self.detector.setFlag(True)
             self.detectorThread.quit()
             self.detectorThread.wait()
             self.pushButton_Start.clicked.disconnect(self.dectetVideo)
@@ -240,6 +243,7 @@ class Ui_mainWindow(QWidget):
             self.plainTextState.setPlainText("测试模式已开启...")
 
     def dectetVideo(self):
+        self.detector.setFlag(False)
         self.plainTextState.appendPlainText("正在进行视频监测...")
         print("选择文件夹")
         # 实例化QFileDialog
@@ -262,6 +266,7 @@ class Ui_mainWindow(QWidget):
         img = cv.imread(filenames[0])
         size = self.label_Display.size()
         img = cv.resize(img, (size.width(), size.height()))
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
         img, out = self.detector.dectetImg(img)
         img = Image.fromarray(img)

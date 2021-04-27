@@ -23,11 +23,10 @@ class Detector(QObject):
         print("[INFO] loading YOLO from disk...")  ## 可以打印下信息
         self.net = cv.dnn.readNetFromDarknet(self.configPath, self.weightsPath)  ## 利用下载的文件
 
-        print("[INFO] loading Vgg from disk...")  ## 可以打印下信息
-        self.model = models.load_model("./model/Vgg/VggVehicle.h5")
         self.labels = ['SUV', 'bus', 'family sedan', 'fire engine', 'heavy truck', 'jeep', 'minibus', 'racing car',
                        'taxi',
                        'truck']
+        self.stopFlag = False
         
     def dectetImg(self, img):
         blobImg = cv.dnn.blobFromImage(img, 1.0 / 255.0, (416, 416), None, True,
@@ -96,12 +95,14 @@ class Detector(QObject):
         fps = cap.get(cv.CAP_PROP_FPS)
         size = (int(frame_width),int(frame_height))
         fourcc = cv.VideoWriter_fourcc(*'XVID')#cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-        out = cv.VideoWriter('output.avi',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
+        out = cv.VideoWriter('output.mp4',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
         while cap.isOpened():
 
             # print("I m here")
             ret, frame = cap.read()
             # 如果正确读取帧，ret为True
+            if self.stopFlag:
+                break
             if not ret:
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
@@ -116,6 +117,8 @@ class Detector(QObject):
         cv.destroyAllWindows()
 
     def dectVehicle(self,img):
+        print("[INFO] loading Vgg from disk...")  ## 可以打印下信息
+        self.model = models.load_model("./model/Vgg/VggVehicle.h5")
         print("[INFO] detecting Vehicle ...")  ## 可以打印下信息
         x = cv.resize(img,(150,150))
         x = np.expand_dims(x, axis=0)
@@ -124,4 +127,7 @@ class Detector(QObject):
         # print(self.model.predict_classes(x).astype("int32")[0], out)
 
         return img, out
+
+    def setFlag(self,b):
+        self.stopFlag=b
 
