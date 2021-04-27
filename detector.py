@@ -26,6 +26,7 @@ class Detector(QObject):
         self.labels = ['SUV', 'bus', 'family sedan', 'fire engine', 'heavy truck', 'jeep', 'minibus', 'racing car',
                        'taxi',
                        'truck']
+        self.stopFlag = False
         
     def dectetImg(self, img):
         blobImg = cv.dnn.blobFromImage(img, 1.0 / 255.0, (416, 416), None, True,
@@ -94,11 +95,13 @@ class Detector(QObject):
         fps = cap.get(cv.CAP_PROP_FPS)
         size = (int(frame_width),int(frame_height))
         fourcc = cv.VideoWriter_fourcc(*'XVID')#cv.VideoWriter_fourcc('M', 'J', 'P', 'G')
-        out = cv.VideoWriter('output.avi',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
+        out = cv.VideoWriter('output.mp4',cv.VideoWriter_fourcc('M', 'J', 'P', 'G'),fps,size)
         while cap.isOpened():
             # print("I m here")
             ret, frame = cap.read()
             # 如果正确读取帧，ret为True
+            if self.stopFlag:
+                break
             if not ret:
                 print("Can't receive frame (stream end?). Exiting ...")
                 break
@@ -123,4 +126,7 @@ class Detector(QObject):
         # print(self.model.predict_classes(x).astype("int32")[0], out)
 
         return img, out
+
+    def setFlag(self,b):
+        self.stopFlag=b
 

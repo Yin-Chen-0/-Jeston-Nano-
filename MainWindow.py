@@ -219,6 +219,7 @@ class Ui_mainWindow(QWidget):
         
         if self.detectorThread.isRunning():
             self.pushButton_Test.setText("测试模式")
+            self.detector.setFlag(True)
             self.detectorThread.quit()
             self.detectorThread.wait()
             self.pushButton_Start.clicked.disconnect(self.dectetVideo)
@@ -242,6 +243,7 @@ class Ui_mainWindow(QWidget):
             self.plainTextState.setPlainText("测试模式已开启...")
 
     def dectetVideo(self):
+        self.detector.setFlag(False)
         self.plainTextState.appendPlainText("正在进行视频监测...")
         print("选择文件夹")
         # 实例化QFileDialog
@@ -264,6 +266,7 @@ class Ui_mainWindow(QWidget):
         img = cv.imread(filenames[0])
         size = self.label_Display.size()
         img = cv.resize(img, (size.width(), size.height()))
+        img = cv.cvtColor(img, cv.COLOR_BGR2RGB)
 
         img, out = self.detector.dectetImg(img)
         img = Image.fromarray(img)
