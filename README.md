@@ -4,15 +4,17 @@
 基于Jeston Nano的嵌入式工地监测项目
 使用PyQt5开发的桌面应用程序
 
+可以对工地上的人员是否戴安全帽等进行监测
+对工地上的 车辆进行识别
+
 #### 软件架构
 使用Pyqt5开发的桌面
 
 
 #### 安装教程
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
+```python
+pip install -r requirments.txt
+ ```
 
 #### 使用说明
 
